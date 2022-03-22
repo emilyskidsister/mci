@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { Course, getCourses, setFavorite, unsetFavorite } from "./api";
-import { StarFilled, StarUnfilled } from "./icons";
+import { Spinner, StarFilled, StarUnfilled } from "./icons";
 import useLocalStorage from "./useLocalStorage";
 import cx from "classnames";
 
@@ -47,7 +47,29 @@ function Course({
   );
 }
 
-function Courses() {
+function Courses({
+  courses,
+  onFavoriteChanged,
+}: {
+  courses: Array<Course>;
+  onFavoriteChanged: (courseId: number, favorite: boolean) => void;
+}) {
+  return (
+    <div className="text-purple-900 divide-y divide-purple-200">
+      {courses.map((course) => (
+        <Course
+          key={course.id}
+          course={course}
+          onFavoriteChanged={(favorite) => {
+            onFavoriteChanged(course.id, favorite);
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function CoursesPage() {
   const [courseIds, setCourseIds] = useLocalStorage<Array<number>>(
     "courseIds",
     null
@@ -61,6 +83,8 @@ function Courses() {
     false
   );
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     (async function () {
       const courses = await getCourses();
@@ -70,58 +94,60 @@ function Courses() {
         courseData[course.id] = course;
       }
       setCourseData(courseData);
+      setLoading(false);
     })();
   }, []);
 
-  if (!courseIds || !courseData) {
-    return null;
-  }
-
   return (
     <div>
-      <header className="text-center w-full text-2xl border-b-purple-900 border-b text-purple-900">
-        "MasterClass"
-      </header>
-      <div className="max-w-xl m-auto">
-        <div className="flex">
+      <div className="sticky top-0 left-0 text-purple-900">
+        <header className="text-center w-full text-2xl border-b-purple-900 border-b bg-white">
+          "MasterClass"
+        </header>
+        <div className="max-w-xl m-auto bg-white flex border-b border-b-purple-200 h-8">
           <input
             type="checkbox"
-            className="mr-1"
+            className=" ml-2 mr-1"
             id="showFavorites"
             onChange={() => setOnlyShowFavorites(!onlyShowFavorites)}
             checked={onlyShowFavorites}
           />
-          <label htmlFor="showFavorites">Only show favorites</label>
+          <label htmlFor="showFavorites" className="text-sm self-center">
+            Only show favorites
+          </label>
+          <div className="flex-1" />
+          {loading && <Spinner />}
         </div>
-        <div className="text-purple-900 divide-y divide-purple-200">
-          {courseIds
-            .filter(
-              (courseId) => !onlyShowFavorites || courseData[courseId].favorite
-            )
-            .map((courseId) => (
-              <Course
-                key={courseId}
-                course={courseData[courseId]}
-                onFavoriteChanged={(favorite) => {
-                  if (favorite) {
-                    setFavorite(courseId);
-                  } else {
-                    unsetFavorite(courseId);
-                  }
-
-                  // Optimism!
-                  setCourseData({
-                    ...courseData,
-                    [courseId]: {
-                      ...courseData[courseId],
-                      favorite,
-                    },
-                  });
-                }}
-              />
-            ))}
-        </div>
+        <div className="h-2 bg-gradient-to-b from-white to-transparent" />
       </div>
+      {courseIds && courseData && (
+        <div className="max-w-xl m-auto">
+          <Courses
+            courses={courseIds
+              .filter(
+                (courseId) =>
+                  !onlyShowFavorites || courseData[courseId].favorite
+              )
+              .map((courseId) => courseData[courseId])}
+            onFavoriteChanged={(courseId, favorite) => {
+              if (favorite) {
+                setFavorite(courseId);
+              } else {
+                unsetFavorite(courseId);
+              }
+
+              // Optimism!
+              setCourseData({
+                ...courseData,
+                [courseId]: {
+                  ...courseData[courseId],
+                  favorite,
+                },
+              });
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -129,10 +155,11 @@ function Courses() {
 function Main() {
   // TODO: actual frontend router?
   if (location.pathname === "/courses") {
-    return <Courses />;
+    return <CoursesPage />;
   }
 
   location.replace("/courses");
+  return null;
 }
 
 ReactDOM.render(<Main />, document.getElementById("root"));
