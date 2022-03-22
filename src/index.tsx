@@ -56,6 +56,10 @@ function Courses() {
     "courseData",
     null
   );
+  const [onlyShowFavorites, setOnlyShowFavorites] = useLocalStorage<boolean>(
+    "onlyShowFavorites",
+    false
+  );
 
   useEffect(() => {
     (async function () {
@@ -78,29 +82,45 @@ function Courses() {
       <header className="text-center w-full text-2xl border-b-purple-900 border-b text-purple-900">
         "MasterClass"
       </header>
-      <div className="text-purple-900 divide-y divide-purple-200 m-auto max-w-xl">
-        {courseIds.map((courseId) => (
-          <Course
-            key={courseId}
-            course={courseData[courseId]}
-            onFavoriteChanged={(favorite) => {
-              if (favorite) {
-                setFavorite(courseId);
-              } else {
-                unsetFavorite(courseId);
-              }
-
-              // Optimism!
-              setCourseData({
-                ...courseData,
-                [courseId]: {
-                  ...courseData[courseId],
-                  favorite,
-                },
-              });
-            }}
+      <div className="max-w-xl m-auto">
+        <div className="flex">
+          <input
+            type="checkbox"
+            className="mr-1"
+            id="showFavorites"
+            onChange={() => setOnlyShowFavorites(!onlyShowFavorites)}
+            checked={onlyShowFavorites}
           />
-        ))}
+          <label htmlFor="showFavorites">Only show favorites</label>
+        </div>
+        <div className="text-purple-900 divide-y divide-purple-200">
+          {courseIds
+            .filter(
+              (courseId) => !onlyShowFavorites || courseData[courseId].favorite
+            )
+            .map((courseId) => (
+              <Course
+                key={courseId}
+                course={courseData[courseId]}
+                onFavoriteChanged={(favorite) => {
+                  if (favorite) {
+                    setFavorite(courseId);
+                  } else {
+                    unsetFavorite(courseId);
+                  }
+
+                  // Optimism!
+                  setCourseData({
+                    ...courseData,
+                    [courseId]: {
+                      ...courseData[courseId],
+                      favorite,
+                    },
+                  });
+                }}
+              />
+            ))}
+        </div>
       </div>
     </div>
   );
