@@ -9,22 +9,13 @@ function Headshot({ url }: { url: string }) {
   return <img className="h-16 rounded-full p-2" src={url} />;
 }
 
-function FavoriteIndicator({
-  isFavorite,
-  onFavoriteChanged,
-}: {
-  isFavorite: boolean;
-  onFavoriteChanged: (favorite: boolean) => void;
-}) {
+function FavoriteIndicator({ isFavorite }: { isFavorite: boolean }) {
   return (
     <div
       className={cx(
-        "w-8 h-8 cursor-pointer",
-        isFavorite ? "text-purple-900" : "text-purple-200",
-        isFavorite ? "hover:text-purple-200" : "hover:text-purple-900"
+        "w-8 h-8",
+        isFavorite ? "text-purple-900" : "text-purple-200"
       )}
-      onClick={() => onFavoriteChanged(!isFavorite)}
-      title="Toggle favorite"
     >
       {isFavorite ? <StarFilled /> : <StarUnfilled />}
     </div>
@@ -39,17 +30,18 @@ function Course({
   onFavoriteChanged: (favorite: boolean) => void;
 }) {
   return (
-    <div className="flex flex-row divide-purple-900 py-2 hover:bg-purple-50">
+    <div
+      className="flex flex-row divide-purple-900 py-2 hover:bg-purple-50 cursor-pointer"
+      onClick={() => onFavoriteChanged(!course.favorite)}
+      title="Toggle favorite"
+    >
       <Headshot url={course.instructor_image_url} />
       <div className="flex-grow self-center">
         <h2 className="text-lg">{course.title}</h2>
         <div className="text-sm">{course.instructor_name}</div>
       </div>
       <div className="self-center">
-        <FavoriteIndicator
-          isFavorite={course.favorite}
-          onFavoriteChanged={onFavoriteChanged}
-        />
+        <FavoriteIndicator isFavorite={course.favorite} />
       </div>
     </div>
   );
