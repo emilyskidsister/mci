@@ -6,7 +6,7 @@ import useLocalStorage from "./useLocalStorage";
 import cx from "classnames";
 
 function Headshot({ url }: { url: string }) {
-  return <img className="h-16 rounded-full p-2" src={url} />;
+  return <img className="h-16 rounded-full p-2 sm:h-20" src={url} />;
 }
 
 function FavoriteIndicator({ isFavorite }: { isFavorite: boolean }) {
@@ -37,8 +37,8 @@ function Course({
     >
       <Headshot url={course.instructor_image_url} />
       <div className="flex-grow self-center">
-        <h2 className="text-lg">{course.title}</h2>
-        <div className="text-sm">{course.instructor_name}</div>
+        <div className="text-sm sm:text-lg">{course.title}</div>
+        <div className="text-xs sm:text-md">{course.instructor_name}</div>
       </div>
       <div className="self-center">
         <FavoriteIndicator isFavorite={course.favorite} />
