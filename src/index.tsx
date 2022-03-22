@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { Course, getCourses, setFavorite, unsetFavorite } from "./api";
 import { Spinner, StarFilled, StarUnfilled } from "./icons";
@@ -83,20 +83,34 @@ function CoursesPage() {
     false
   );
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean | "error">(true);
 
   useEffect(() => {
     (async function () {
-      const courses = await getCourses();
-      setCourseIds(courses.map((course) => course.id));
-      const courseData: Record<string, Course> = {};
-      for (const course of courses) {
-        courseData[course.id] = course;
+      try {
+        const courses = await getCourses();
+        setCourseIds(courses.map((course) => course.id));
+        const courseData: Record<string, Course> = {};
+        for (const course of courses) {
+          courseData[course.id] = course;
+        }
+        setCourseData(courseData);
+        setLoading(false);
+      } catch (err) {
+        setLoading("error");
       }
-      setCourseData(courseData);
-      setLoading(false);
     })();
   }, []);
+
+  if (loading === "error") {
+    return (
+      <div className="w-full h-screen flex text-red-900">
+        <div className="m-auto">
+          Something went wrong, it's not your fault. Try again later.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -104,6 +118,7 @@ function CoursesPage() {
         <header className="text-center w-full text-2xl border-b-purple-900 border-b bg-white">
           "MasterClass"
         </header>
+
         <div className="max-w-xl m-auto bg-white flex border-b border-b-purple-200 h-8">
           <input
             type="checkbox"
@@ -118,8 +133,10 @@ function CoursesPage() {
           <div className="flex-1" />
           {loading && <Spinner />}
         </div>
+
         <div className="h-2 bg-gradient-to-b from-white to-transparent" />
       </div>
+
       {courseIds && courseData && (
         <div className="max-w-xl m-auto">
           <Courses
@@ -130,11 +147,17 @@ function CoursesPage() {
               )
               .map((courseId) => courseData[courseId])}
             onFavoriteChanged={(courseId, favorite) => {
-              if (favorite) {
-                setFavorite(courseId);
-              } else {
-                unsetFavorite(courseId);
-              }
+              (async function () {
+                try {
+                  if (favorite) {
+                    await setFavorite(courseId);
+                  } else {
+                    await unsetFavorite(courseId);
+                  }
+                } catch (err) {
+                  setLoading("error");
+                }
+              })();
 
               // Optimism!
               setCourseData({

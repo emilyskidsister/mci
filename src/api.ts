@@ -19,6 +19,10 @@ export async function getCourses(): Promise<Array<Course>> {
     },
   });
 
+  if (!request.ok) {
+    throw new Error("Failed to get courses");
+  }
+
   const courses = await request.json();
   return courses;
 }
@@ -32,15 +36,23 @@ export async function setFavorite(id: number): Promise<void> {
     },
   });
 
+  if (!request.ok) {
+    throw new Error("Failed to set favorite");
+  }
+
   await request.json();
 }
 
 export async function unsetFavorite(id: number): Promise<void> {
-  await fetch(FAVOURITE_URL, {
+  const request = await fetch(FAVOURITE_URL, {
     method: "DELETE",
     body: JSON.stringify({ email: EMAIL, course_id: id }),
     headers: {
       "content-type": "application/json",
     },
   });
+
+  if (!request.ok) {
+    throw new Error("Failed to unset favorite");
+  }
 }
